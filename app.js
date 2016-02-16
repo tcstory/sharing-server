@@ -10,26 +10,9 @@ var io = require('socket.io')(server);
 
 
 var Utils = require('./utils');
-app.post('/sign-in', function (req, res) {
-    Utils.cros(res);
-    res.set('Content-Type', 'application/json');
-    res.send({
-        code: 200,
-        userName: '中华田园犬',
-        userId: 10001,
-        userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg'
-    });
-});
 
-app.get('/serv/basic-info', function (req, res) {
-    Utils.cros(res);
-    res.set('Content-Type', 'application/json');
-    res.send({
-        code: 200,
-        userList: Utils.getCurUserList(),
-        activities:Utils.getActivities()
-    })
-});
+var userRouter = require('./routers/user.js');
+app.use('/serv/user', userRouter);
 
 
 io.on('connection', function(socket){
@@ -50,10 +33,6 @@ io.on('connection', function(socket){
     socket.emit('chat messages', Utils.getMessages());
 });
 
-app.options('*', function (req, res) {
-    Utils.cros(res);
-    res.send();
-});
 
 server.listen(9999);
 
