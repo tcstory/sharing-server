@@ -7,9 +7,15 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-
+var path = require('path');
 
 var Utils = require('./utils');
+
+app.use(express.static(path.join(__dirname, 'site', 'dist')));
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname, 'site', 'dist', 'app.html'));
+});
+
 
 var userRouter = require('./routers/user.js');
 app.use('/serv/user', userRouter);
