@@ -23,11 +23,22 @@ router.post('/sign-in', function (req, res) {
 router.get('/basic-info', function (req, res) {
     Utils.cros(res);
     res.set('Content-Type', 'application/json');
-    res.send({
-        code: 200,
-        userList: Utils.getCurUserList(),
-        activities:Utils.getActivities()
-    })
+    var obj = {};
+    obj.code = 200;
+    if (req.session.userId) {
+        obj.userId = req.session.userId;
+        obj.userAvatar = req.session.userAvatar;
+        obj.curRoom = req.session.curRoom;
+    } else if (req.session.visitorId) {
+        obj.userId = req.session.visitorId;
+        obj.userAvatar = req.session.userAvatar;
+        obj.curRoom = req.session.curRoom;
+    } else {
+        //obj.userId = req.session.visitorId;
+        //obj.userAvatar = req.session.userAvatar;
+        //obj.curRoom = req.session.curRoom;
+    }
+    res.send(obj);
 });
 
 

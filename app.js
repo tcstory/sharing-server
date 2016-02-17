@@ -10,11 +10,11 @@ var io = require('socket.io')(server);
 var path = require('path');
 
 var Utils = require('./utils');
-var UtilsDebug = require('./utils-debug');
-var debugging = UtilsDebug.debugging;
 
 var userList = [];
 var visitorList = [];
+
+var configMap = require('./config.js');
 
 app.use(require('cookie-parser')());
 app.use(require('express-session')({
@@ -25,18 +25,17 @@ app.use(require('express-session')({
 ));
 app.use(express.static(path.join(__dirname, 'site', 'dist')));
 app.get('/', function (req, res) {
-    debugging(function () {
-        console.log(req.session.userId);
-    });
-    if (req.cookies.room) {
+    if (req.session.userId) {
+
+    } else if (req.session.visitorId) {
+        //res.cookie('room', '10001', {
+        //    httpOnly: true
+        //});
     } else {
-        res.cookie('room', '10001', {
-            httpOnly: true
-        });
-        req.session.userId = Utils.createIdForVisitor(visitorList);
-        debugging(function () {
-            console.log(visitorList);
-        });
+        req.session.visitorId = Utils.createIdForVisitor(visitorList);
+        req.session.userName = req.session.visitorId;
+        req.session.userAvatar = configMap.defaultAvatar;
+        req.session.curRoom = configMap.defaultRoom;
     }
     res.sendFile(path.join(__dirname, 'site', 'dist', 'app.html'));
 });
@@ -47,9 +46,12 @@ app.use('/serv/user', userRouter);
 
 
 io.on('connection', function(socket){
-    console.log('a user connected');
+    console.log('a user connect');
+    socket.emit('user list', Utils.getCurUserList());
+    socket.emit('activities', Utils.getActivities());
+    socket.emit('chat messages', Utils.getMessages());
+
     socket.on('disconnect', function(){
-        console.log('user disconnected');
     });
     socket.on('chat message', function (msg) {
         socket.emit('chat messages', {
@@ -59,9 +61,6 @@ io.on('connection', function(socket){
             content: msg
         });
     });
-    socket.emit('user list', Utils.getCurUserList());
-    socket.emit('activities', Utils.getActivities());
-    socket.emit('chat messages', Utils.getMessages());
 });
 
 

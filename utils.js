@@ -3,9 +3,10 @@
  */
 
 function cros(res) {
-    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Origin', 'http://127.0.0.1:9999');
     res.set('Access-Control-Allow-Methods', 'GET, POST');
     res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.set('Access-Control-Allow-Credentials', 'true');
 }
 
 function getCurUserList() {
@@ -13,15 +14,15 @@ function getCurUserList() {
         {
             userName: '爱情来过',
             userId: 10000,
-            userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg'
+            userAvatar: '/img/default-avatar.png'
         }, {
             userName: '中华田园犬',
             userId: 10001,
-            userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg'
+            userAvatar: '/img/default-avatar.png'
         }, {
             userName: '大兄弟',
             userId: 10002,
-            userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg'
+            userAvatar: '/img/default-avatar.png'
         }
     ];
 }
@@ -44,19 +45,19 @@ function getActivities() {
 function getMessages() {
     return [
         {
-            userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg',
+            userAvatar: '/img/default-avatar.png',
             userName: '爱情来过',
             userId: '',
             content: '有人吗?'
         },
         {
-            userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg',
+            userAvatar: '/img/default-avatar.png',
             userName: '大兄弟',
             userId: '',
             content: '额没有哦'
         },
         {
-            userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg',
+            userAvatar: '/img/default-avatar.png',
             userName: '中华田园犬',
             userId: '',
             content: '要干嘛啊?'
@@ -74,15 +75,59 @@ function checkDuplicatedId(createdId, visitorList) {
     visitorList.push(createdId);
 }
 
+function getBasicInfo() {
+    return {
+        userList:  [
+            {
+                userName: '爱情来过',
+                userId: 10000,
+                userAvatar: '/img/default-avatar.png'
+            }, {
+                userName: '中华田园犬',
+                userId: 10001,
+                userAvatar: '/img/default-avatar.png'
+            }, {
+                userName: '大兄弟',
+                userId: 10002,
+                userAvatar: '/img/default-avatar.png'
+            }
+        ],
+        messages: [
+            {
+                userAvatar: '/img/default-avatar.png',
+                userName: '爱情来过',
+                userId: '',
+                content: '有人吗?'
+            },
+            {
+                userAvatar: '/img/default-avatar.png',
+                userName: '大兄弟',
+                userId: '',
+                content: '额没有哦'
+            },
+            {
+                userAvatar: '/img/default-avatar.png',
+                userName: '中华田园犬',
+                userId: '',
+                content: '要干嘛啊?'
+            }
+        ]
+    }
+}
+
+function createIdForVisitor(visitorList) {
+    var id;
+    do {
+        id = parseInt(Math.random() * 100000);
+    } while (checkDuplicatedId(id, visitorList));
+    return id;
+}
+
 module.exports = {
     cros: cros,
     getCurUserList: getCurUserList,
     getActivities: getActivities,
     getMessages: getMessages,
-    createIdForVisitor: function (visitorList) {
-        do {
-            var id = parseInt(Math.random() * 100000)
-        } while (checkDuplicatedId(id, visitorList));
-        return id;
-    }
+    createIdForVisitor: createIdForVisitor,
+    getBasicInfo: getBasicInfo
 };
