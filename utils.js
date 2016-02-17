@@ -64,9 +64,25 @@ function getMessages() {
     ]
 }
 
+function checkDuplicatedId(createdId, visitorList) {
+    var len = visitorList.length;
+    for(var i = 0; i < len; i++) {
+        if (visitorList[i] === createdId) {
+            return true;
+        }
+    }
+    visitorList.push(createdId);
+}
+
 module.exports = {
     cros: cros,
     getCurUserList: getCurUserList,
     getActivities: getActivities,
-    getMessages: getMessages
+    getMessages: getMessages,
+    createIdForVisitor: function (visitorList) {
+        do {
+            var id = parseInt(Math.random() * 100000)
+        } while (checkDuplicatedId(id, visitorList));
+        return id;
+    }
 };
