@@ -85,10 +85,12 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
         io.on('connection', function (socket) {
 
             var session = socket.handshake.session;
-            socket.join(socket.handshake.session.curRoom);
+            socket.join(session.curRoom);
             onlinePeopleCollection.find({curRoom: session.curRoom}).toArray(function (err, docs) {
                 if (!err) {
-                    io.to(session.curRoom).emit('user list', docs);
+                    if (docs) {
+                        io.to(session.curRoom).emit('user list', docs);
+                    }
                 } else {
                     throw new Error(err);
                 }
@@ -100,10 +102,12 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
             });
 
             var projection = {};
-            projection['r' + session.curRoom] = 1;
+            projection[session.curRoom] = 1;
             projection['_id'] = 0;
-            chatHistoryCollection.find({},projection).next(function (err, doc) {
-                socket.emit('chat messages', doc['r' + session.curRoom]);
+            chatHistoryCollection.find({},projection).limit(configMap.defaultPushMessagesNumber).next(function (err, doc) {
+                if (doc) {
+                    socket.emit('chat messages', doc[session.curRoom]);
+                }
             });
             socket.on('disconnect', function () {
                 onlinePeopleCollection.deleteOne({
@@ -113,7 +117,9 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
                 });
                 onlinePeopleCollection.find({curRoom: session.curRoom}).toArray(function (err, docs) {
                     if (!err) {
-                        io.to(session.curRoom).emit('user list', docs);
+                        if (docs) {
+                            io.to(session.curRoom).emit('user list', docs);
+                        }
                     } else {
                         throw new Error(err);
                     }
@@ -125,12 +131,23 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
                 })
             });
             socket.on('chat message', function (msg) {
-                io.to(session.curRoom).emit('chat messages', {
+                var messageObj = {
                     userId: session.userId,
                     userAvatar: session.userAvatar,
                     userName: session.userName,
-                    content: msg
-                });
+                    content: msg,
+                    timestamp: Date.now()
+                };
+                io.to(session.curRoom).emit('chat messages', messageObj);
+                var whereObj = {};
+                whereObj[session.curRoom] = {
+                    $exists: true
+                };
+                var pushObj = {
+                    $push: {}
+                };
+                pushObj['$push'][session.curRoom] = messageObj;
+                chatHistoryCollection.updateOne(whereObj,pushObj);
             });
         });
         server.listen(9999);
