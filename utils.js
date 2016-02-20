@@ -18,6 +18,14 @@ function createIdForVisitor(peopleList) {
     } while (checkDuplicatedId(id, peopleList));
     return id;
 }
+function checkDuplicatedId(createdId, peopleList) {
+    var len = peopleList.length;
+    for(var i = 0; i < len; i++) {
+        if (peopleList[i] === createdId) {
+            return true;
+        }
+    }
+}
 
 module.exports = {
     cros: cros,
