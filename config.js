@@ -4,5 +4,8 @@
 
 module.exports = {
     defaultRoom: 10001,
-    defaultAvatar: '/img/default-avatar.png'
+    defaultAvatar: '/img/default-avatar.png',
+    mongoDBUrl: 'mongodb://localhost:27017/test',
+    visitorTextPrompt: '游客',
+    allowOrigin: 'http://127.0.0.1:9999'
 };
