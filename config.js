@@ -4,9 +4,13 @@
 
 module.exports = {
     defaultRoom: 'r10001',
-    defaultAvatar: '/img/default-avatar.png',
+    defaultAvatar: '/assets/images/default-avatar.png',
     mongoDBUrl: 'mongodb://localhost:27017/test',
     visitorTextPrompt: '游客',
     allowOrigin: 'http://127.0.0.1:9999',
-    defaultPushMessagesNumber: 100
+    defaultPushMessagesNumber: 100,
+    statusCode: {
+        ok: 200,
+        error: 5000
+    }
 };

@@ -10,15 +10,15 @@ var io = require('socket.io')(server);
 var path = require('path');
 
 var Utils = require('./utils');
-
-
 var configMap = require('./config.js');
-
-
 var MongoClient = require('mongodb').MongoClient;
+
+global.io = io;
+
 MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
     if (!err) {
         console.log("Connected correctly to server");
+        global.dbInstance = dbInstance;
         var onlinePeopleCollection = dbInstance.collection('onlinePeople');
         var chatHistoryCollection = dbInstance.collection('chatHistory');
 
@@ -81,41 +81,41 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
         app.use('/serv/user', userRouter);
 
         var sharedsession = require("express-socket.io-session");
-        io.use(sharedsession(sessionInstance));
+        io.use(sharedsession(sessionInstance, {
+            autoSave: true
+        }));
         io.on('connection', function (socket) {
-
-            var session = socket.handshake.session;
-            socket.join(session.curRoom);
-            onlinePeopleCollection.find({curRoom: session.curRoom}).toArray(function (err, docs) {
+            socket.join(socket.handshake.session.curRoom);
+            onlinePeopleCollection.find({curRoom: socket.handshake.session.curRoom}).toArray(function (err, docs) {
                 if (!err) {
                     if (docs) {
-                        io.to(session.curRoom).emit('user list', docs);
+                        io.to(socket.handshake.session.curRoom).emit('user list', docs);
                     }
                 } else {
                     throw new Error(err);
                 }
             });
-            io.to(session.curRoom).emit('activities', {
-                userName: session.userName,
-                userId: session.userId,
+            io.to(socket.handshake.session.curRoom).emit('activities', {
+                userName: socket.handshake.session.userName,
+                userId: socket.handshake.session.userId,
                 action: 'join'
             });
 
             var projection = {};
-            projection[session.curRoom] = 1;
+            projection[socket.handshake.session.curRoom] = 1;
             projection['_id'] = 0;
             chatHistoryCollection.find({},projection).limit(configMap.defaultPushMessagesNumber).next(function (err, doc) {
                 if (doc) {
-                    socket.emit('chat messages', doc[session.curRoom]);
+                    socket.emit('chat messages', doc[socket.handshake.session.curRoom]);
                 }
             });
             socket.on('disconnect', function () {
                 onlinePeopleCollection.deleteOne({
                     userId: {
-                        $eq: session.userId
+                        $eq: socket.handshake.session.userId
                     }
                 });
-                onlinePeopleCollection.find({curRoom: session.curRoom}).toArray(function (err, docs) {
+                onlinePeopleCollection.find({curRoom: socket.handshake.session.curRoom}).toArray(function (err, docs) {
                     if (!err) {
                         if (docs) {
                             io.to(session.curRoom).emit('user list', docs);
@@ -124,29 +124,29 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
                         throw new Error(err);
                     }
                 });
-                io.to(session.curRoom).emit('activities', {
-                    userName: session.userName,
-                    userAvatar: session.userAvatar,
+                io.to(socket.handshake.session.curRoom).emit('activities', {
+                    userName: socket.handshake.session.userName,
+                    userAvatar: socket.handshake.session.userAvatar,
                     action: 'leave'
                 })
             });
             socket.on('chat message', function (msg) {
                 var messageObj = {
-                    userId: session.userId,
-                    userAvatar: session.userAvatar,
-                    userName: session.userName,
+                    userId: socket.handshake.session.userId,
+                    userAvatar: socket.handshake.session.userAvatar,
+                    userName: socket.handshake.session.userName,
                     content: msg,
                     timestamp: Date.now()
                 };
-                io.to(session.curRoom).emit('chat messages', messageObj);
+                io.to(socket.handshake.session.curRoom).emit('chat messages', messageObj);
                 var whereObj = {};
-                whereObj[session.curRoom] = {
+                whereObj[socket.handshake.session.curRoom] = {
                     $exists: true
                 };
                 var pushObj = {
                     $push: {}
                 };
-                pushObj['$push'][session.curRoom] = messageObj;
+                pushObj['$push'][socket.handshake.session.curRoom] = messageObj;
                 chatHistoryCollection.updateOne(whereObj,pushObj);
             });
         });

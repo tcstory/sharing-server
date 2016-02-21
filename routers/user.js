@@ -5,38 +5,83 @@
 
 var express = require('express');
 var router = express.Router();
+var bodyParser = require('body-parser');
 
 var Utils = require('../utils');
+var configMap = require('../config.js');
 
 
-router.post('/sign-in', function (req, res) {
+
+router.post('/sign-in', bodyParser.json(), function (req, res) {
     Utils.cros(res);
     res.set('Content-Type', 'application/json');
-    res.send({
-        code: 200,
-        userName: '中华田园犬',
-        userId: 10001,
-        userAvatar: 'http://7qn8rp.com1.z0.glb.clouddn.com/dog.jpg'
+    var myCursor = global.dbInstance.collection('user').find({
+        userName: req.body['user_name'],
+        password: req.body['user_password']
     });
+    myCursor.next(function (err, doc) {
+        if (!err) {
+            if (doc) {
+                var previousPeople = req.session.userId;
+                global.io.to(req.session.curRoom).emit('activities', {
+                    userName: req.session.userName,
+                    userAvatar: req.session.userAvatar,
+                    action: 'leave'
+                });
+
+                req.session.userName = doc.userName;
+                req.session.userId = doc.userId;
+                req.session.userAvatar = doc.userAvatar;
+                global.dbInstance.collection('onlinePeople').updateOne({
+                    userId: previousPeople
+                }, {
+                    $set: {
+                        userName: doc.userName,
+                        userId: doc.userId,
+                        userAvatar: doc.userAvatar
+                    }
+                });
+                res.send({
+                    code: configMap.statusCode.ok,
+                    userName: doc.userName,
+                    userId: doc.userId,
+                    userAvatar: doc.userAvatar
+                });
+            } else {
+                res.send({
+                    code: configMap.statusCode.error
+                })
+            }
+        } else {
+            throw new Error(err);
+        }
+    });
+});
+
+router.get('/sign-out', function (req,res) {
+    Utils.cros(res);
+    if (req.session.userId.length != 0) {
+       global.dbInstance.collection('onlinePeople').deleteOne({
+           userId: {
+               $eq: req.session.userId
+           }
+       });
+       req.session.destroy();
+       res.send({
+           code: configMap.statusCode.ok
+       })
+   }
 });
 
 router.get('/basic-info', function (req, res) {
     Utils.cros(res);
     res.set('Content-Type', 'application/json');
     var obj = {};
-    obj.code = 200;
+    obj.code = configMap.statusCode.ok;
     if (req.session.userId) {
         obj.userId = req.session.userId;
         obj.userAvatar = req.session.userAvatar;
-        obj.curRoom = req.session.curRoom;
-    } else if (req.session.visitorId) {
-        obj.userId = req.session.visitorId;
-        obj.userAvatar = req.session.userAvatar;
-        obj.curRoom = req.session.curRoom;
-    } else {
-        //obj.userId = req.session.visitorId;
-        //obj.userAvatar = req.session.userAvatar;
-        //obj.curRoom = req.session.curRoom;
+        obj.userName = req.session.userName;
     }
     res.send(obj);
 });
