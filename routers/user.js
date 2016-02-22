@@ -23,11 +23,11 @@ router.post('/sign-in', bodyParser.json(), function (req, res) {
         if (!err) {
             if (doc) {
                 var previousPeople = req.session.userId;
-                global.io.to(req.session.curRoom).emit('activities', {
-                    userName: req.session.userName,
-                    userAvatar: req.session.userAvatar,
-                    action: 'leave'
-                });
+                //global.io.to(req.session.curRoom).emit('activities', {
+                //    userName: req.session.userName,
+                //    userAvatar: req.session.userAvatar,
+                //    action: 'leave'
+                //});
 
                 req.session.userName = doc.userName;
                 req.session.userId = doc.userId;
@@ -58,6 +58,47 @@ router.post('/sign-in', bodyParser.json(), function (req, res) {
     });
 });
 
+router.post('/sign-up', bodyParser.json(), function (req, res) {
+    Utils.cros(res);
+    res.set('Content-Type', 'application/json');
+    var userName = req.body['user_name'];
+    var password = req.body['user_password'];
+    global.dbInstance.collection('user').find({
+        userName: userName
+    }).hasNext(function (err, result) {
+        if (!err) {
+            if (!result) {
+                global.dbInstance.collection('user').find().count(function (err, result) {
+                   if (!err) {
+                       var userId = configMap.userIdPrefixCharacter + (configMap.userIdStartNumber + result);
+                       global.dbInstance.collection('user').insertOne({
+                           userName: userName,
+                           password: password,
+                           userId: userId,
+                           userAvatar: configMap.defaultAvatar
+                       });
+                       var previousPeople = req.session.userId;
+                       req.session.userName = userName;
+                       req.session.userId = userId;
+                       req.session.userAvatar = configMap.defaultAvatar;
+                       global.dbInstance.collection('onlinePeople').updateOne({
+                           userId: previousPeople
+                       }, {
+                           $set: {
+                               userName: userName,
+                               userId: userId,
+                               userAvatar: configMap.defaultAvatar
+                           }
+                       });
+                       res.send({
+                           code: configMap.statusCode.ok
+                       })
+                   }
+                });
+            }
+        }
+    })
+});
 router.get('/sign-out', function (req,res) {
     Utils.cros(res);
     if (req.session.userId.length != 0) {

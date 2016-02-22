@@ -12,5 +12,7 @@ module.exports = {
     statusCode: {
         ok: 200,
         error: 5000
-    }
+    },
+    userIdStartNumber: 10000,
+    userIdPrefixCharacter: 'u'
 };
