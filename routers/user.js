@@ -49,7 +49,11 @@ router.post('/sign-in', bodyParser.json(), function (req, res) {
                 });
             } else {
                 res.send({
-                    code: configMap.statusCode.error
+                    code: configMap.statusCode.error,
+                    msg: {
+                        content: '密码错误',
+                        title: '错误'
+                    }
                 })
             }
         } else {
@@ -95,6 +99,14 @@ router.post('/sign-up', bodyParser.json(), function (req, res) {
                        })
                    }
                 });
+            } else {
+                res.send({
+                    code: configMap.statusCode.error,
+                    msg: {
+                        content: '用户名重复',
+                        title: '错误'
+                    }
+                })
             }
         }
     })
