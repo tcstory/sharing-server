@@ -14,5 +14,7 @@ module.exports = {
         error: 5000
     },
     userIdStartNumber: 10000,
-    userIdPrefixCharacter: 'u'
+    roomIdStartNumber: 10001,
+    userIdPrefixCharacter: 'u',
+    roomIdPrefixCharacter: 'r'
 };

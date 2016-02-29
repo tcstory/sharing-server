@@ -135,8 +135,22 @@ router.get('/basic-info', function (req, res) {
         obj.userId = req.session.userId;
         obj.userAvatar = req.session.userAvatar;
         obj.userName = req.session.userName;
+        var projection = {};
+        //projection[req.session.curRoom] = 1;
+        projection['_id'] = 0;
+        global.dbInstance.collection('room').find({
+            roomId: {
+                $eq: req.session.curRoom
+            }
+        },projection).next(function (err, doc) {
+            if (doc) {
+                obj.roomLogo = doc.roomLogo;
+                obj.roomDescription = doc.roomDescription;
+                obj.roomName = doc.roomName;
+                res.send(obj);
+            }
+        });
     }
-    res.send(obj);
 });
 
 

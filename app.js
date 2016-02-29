@@ -79,7 +79,8 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
 
         var userRouter = require('./routers/user.js');
         app.use('/serv/user', userRouter);
-
+        var roomRouter = require('./routers/room.js');
+        app.use('/serv/room', roomRouter);
         var sharedsession = require("express-socket.io-session");
         io.use(sharedsession(sessionInstance, {
             autoSave: true
