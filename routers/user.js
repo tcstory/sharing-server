@@ -236,6 +236,35 @@ router.post('/modify-data', upload.single('userAvatar'), function (req, res) {
     });
 });
 
+
+router.post('/modify-password', bodyParser.json(), function (req, res) {
+    global.dbInstance.collection('user').find({userId: req.session.userId}).next(function (err, doc) {
+        if (!err) {
+            if (doc.password === req.body.oldPassword) {
+                global.dbInstance.collection('user').updateOne({userId: req.session.userId},{
+                    $set: {
+                        password: req.body.newPassword
+                    }
+                });
+                res.send({
+                    code: configMap.statusCode.ok,
+                    msg: {
+                        content: '密码修改成功',
+                        title: '报喜'
+                    }
+                })
+            } else {
+                res.send({
+                    code: configMap.statusCode.error,
+                    msg: {
+                        content: '旧密码错误',
+                        title: '错误'
+                    }
+                })
+            }
+        }
+    })
+});
 router.options('/*?', function (req, res) {
     Utils.cros(res);
     res.send();
