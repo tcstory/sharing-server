@@ -102,12 +102,11 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
                 action: 'join'
             });
 
-            var projection = {};
-            projection[socket.handshake.session.curRoom] = 1;
-            projection['_id'] = 0;
-            chatHistoryCollection.find({},projection).limit(configMap.defaultPushMessagesNumber).next(function (err, doc) {
+            chatHistoryCollection.find({
+                roomId: socket.handshake.session.curRoom
+            }).limit(configMap.defaultPushMessagesNumber).next(function (err, doc) {
                 if (doc) {
-                    socket.emit('chat messages', doc[socket.handshake.session.curRoom]);
+                    socket.emit('chat messages', doc.chats);
                 }
             });
             socket.on('disconnect', function () {
@@ -140,15 +139,19 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
                     timestamp: Date.now()
                 };
                 io.to(socket.handshake.session.curRoom).emit('chat messages', messageObj);
-                var whereObj = {};
-                whereObj[socket.handshake.session.curRoom] = {
-                    $exists: true
-                };
-                var pushObj = {
-                    $push: {}
-                };
-                pushObj['$push'][socket.handshake.session.curRoom] = messageObj;
-                chatHistoryCollection.updateOne(whereObj,pushObj);
+                //var whereObj = {};
+                //whereObj[socket.handshake.session.curRoom] = {
+                //    $exists: true
+                //};
+                //var pushObj = {
+                //    $push: {}
+                //};
+                //pushObj['$push'][socket.handshake.session.curRoom] = messageObj;
+                chatHistoryCollection.updateOne({roomId: socket.handshake.session.curRoom},{
+                    $push: {
+                        chats: messageObj
+                    }
+                });
             });
         });
         server.listen(9999);
