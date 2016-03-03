@@ -99,8 +99,21 @@ router.post('/modify-room', upload.single('roomLogo'), function (req, res) {
             title: '成功'
         }
     })
+});
 
-
+router.get('/get-room-list/:querystring', function (req, res) {
+    global.dbInstance.collection('room').find({
+        roomName: new RegExp(req.params.querystring)
+    },{_id:false}).limit(5).toArray(function (err, docs) {
+        if (!err) {
+            if (docs) {
+                res.send({
+                    code: configMap.statusCode.ok,
+                    result: docs
+                })
+            }
+        }
+    });
 });
 
 
