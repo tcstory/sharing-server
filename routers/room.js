@@ -45,6 +45,10 @@ router.post('/create-room', upload.single('roomLogo'), function (req, res) {
                             roomDescription: req.body.roomDescription,
                             roomLogo: 'assets/room/' + roomId + '/logo.' + req.body.logoSuffix
                         });
+                        global.dbInstance.collection('chatHistory').insertOne({
+                            roomId: roomId,
+                            chats:[]
+                        });
                         res.send({
                             code: configMap.statusCode.ok,
                             msg: {
@@ -104,7 +108,7 @@ router.post('/modify-room', upload.single('roomLogo'), function (req, res) {
 router.get('/get-room-list/:querystring', function (req, res) {
     global.dbInstance.collection('room').find({
         roomName: new RegExp(req.params.querystring)
-    },{_id:false}).limit(5).toArray(function (err, docs) {
+    }, {_id: false}).limit(5).toArray(function (err, docs) {
         if (!err) {
             if (docs) {
                 res.send({
@@ -114,6 +118,15 @@ router.get('/get-room-list/:querystring', function (req, res) {
             }
         }
     });
+});
+router.get('/join-room/:roomid', function (req, res) {
+    global.dbInstance.collection('onlinePeople').deleteOne({
+        userId: req.session.userId
+    });
+    req.session.curRoom = req.params.roomid;
+    res.send({
+        code: 200
+    })
 });
 
 
