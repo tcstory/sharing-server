@@ -36,15 +36,18 @@ router.post('/create-room', upload.single('roomLogo'), function (req, res) {
                 global.dbInstance.collection('room').find().count(function (err, result) {
                     if (!err) {
                         var roomId = configMap.roomIdPrefixCharacter + (configMap.roomIdStartNumber + result);
-                        fs.mkdirSync(path.join(storePath, roomId));
-                        fs.writeFileSync(path.join(storePath, roomId, 'logo.' + req.body.logoSuffix), fs.readFileSync(path.join(storePath, req.body.logoFileName)));
-                        fs.unlinkSync(path.join(storePath, req.body.logoFileName));
-                        global.dbInstance.collection('room').insertOne({
+                        var roomInfo = {
                             roomId: roomId,
                             roomName: req.body.roomName,
-                            roomDescription: req.body.roomDescription,
-                            roomLogo: 'assets/room/' + roomId + '/logo.' + req.body.logoSuffix
-                        });
+                            roomDescription: req.body.roomDescription
+                        };
+                        if (typeof req.file !== 'undefined') {
+                            fs.mkdirSync(path.join(storePath, roomId));
+                            fs.writeFileSync(path.join(storePath, roomId, 'logo.' + req.body.logoSuffix), fs.readFileSync(path.join(storePath, req.body.logoFileName)));
+                            fs.unlinkSync(path.join(storePath, req.body.logoFileName));
+                            roomInfo.roomLogo = 'assets/room/' + roomId + '/logo.' + req.body.logoSuffix;
+                        }
+                        global.dbInstance.collection('room').insertOne(roomInfo);
                         global.dbInstance.collection('chatHistory').insertOne({
                             roomId: roomId,
                             chats:[]
