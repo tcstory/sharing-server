@@ -12,7 +12,7 @@ var configMap = require('../config.js');
 
 
 router.post('/sign-in', bodyParser.json(), function (req, res) {
-    Utils.cros(res);
+    Utils.cros(req,res);
     res.set('Content-Type', 'application/json');
     var myCursor = global.dbInstance.collection('user').find({
         userName: req.body['user_name'],
@@ -63,7 +63,7 @@ router.post('/sign-in', bodyParser.json(), function (req, res) {
 });
 
 router.post('/sign-up', bodyParser.json(), function (req, res) {
-    Utils.cros(res);
+    Utils.cros(req,res);
     res.set('Content-Type', 'application/json');
     var userName = req.body['user_name'];
     var password = req.body['user_password'];
@@ -112,7 +112,7 @@ router.post('/sign-up', bodyParser.json(), function (req, res) {
     })
 });
 router.get('/sign-out', function (req, res) {
-    Utils.cros(res);
+    Utils.cros(req,res);
     if (req.session.userId.length != 0) {
         global.dbInstance.collection('onlinePeople').deleteOne({
             userId: {
@@ -127,7 +127,7 @@ router.get('/sign-out', function (req, res) {
 });
 
 router.get('/basic-info', function (req, res) {
-    Utils.cros(res);
+    Utils.cros(req,res);
     res.set('Content-Type', 'application/json');
     var obj = {};
     obj.code = configMap.statusCode.ok;
@@ -266,7 +266,7 @@ router.post('/modify-password', bodyParser.json(), function (req, res) {
     })
 });
 router.options('/*?', function (req, res) {
-    Utils.cros(res);
+    Utils.cros(req,res);
     res.send();
 });
 
