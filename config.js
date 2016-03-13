@@ -16,5 +16,6 @@ module.exports = {
     userIdStartNumber: 10000,
     roomIdStartNumber: 10001,
     userIdPrefixCharacter: 'u',
-    roomIdPrefixCharacter: 'r'
+    roomIdPrefixCharacter: 'r',
+    postStartNumber: 10000
 };

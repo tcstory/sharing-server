@@ -4,6 +4,7 @@
 var express = require('express');
 var router = express.Router();
 var async = require('async');
+var bodyParser = require('body-parser');
 
 
 var configMap = require('../config.js');
@@ -48,12 +49,44 @@ router.get('/get-post-list', function (req, res) {
                 res.send({
                     code: configMap.statusCode.ok,
                     posts: results[0]
-                })
+                });
                 console.timeEnd('db');
             }
         })
     });
 });
+
+router.post('/create-post', bodyParser.json(), function (req, res) {
+    global.dbInstance.collection('posts').find({roomId: req.session.curRoom}).next(function (err, doc) {
+        if (!err) {
+            global.dbInstance.collection('posts').updateOne({
+                roomId: req.session.curRoom
+            }, {
+                $push: {
+                    posts: {
+                        postTitle: req.body['title'],
+                        content: req.body['content'],
+                        authorId: req.session.userId,
+                        postId: configMap.postStartNumber + doc.posts.length,
+                        postTime: Date.now()
+                    }
+                }
+            }, function (err, result) {
+                if (!err) {
+                    res.send({
+                        code: configMap.statusCode.ok,
+                        msg: {
+                            content: '发帖成功',
+                            title: '报喜'
+                        }
+                    })
+                }
+            });
+        }
+    });
+
+});
+
 
 module.exports = router;
 
