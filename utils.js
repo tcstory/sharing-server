@@ -5,7 +5,6 @@
 
 var configMap = require('./config.js');
 function cros(req,res) {
-    console.log(req.get('referer'));
     res.set('Access-Control-Allow-Origin',req.get('referer')||  configMap.allowOrigin);
     res.set('Access-Control-Allow-Methods', 'GET, POST');
     res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');

@@ -76,7 +76,8 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
             res.sendFile(path.join(__dirname, 'site', 'dist', 'app.html'));
         });
 
-
+        var postRouter = require('./routers/post.js');
+        app.use('/serv/post',postRouter);
         var userRouter = require('./routers/user.js');
         app.use('/serv/user', userRouter);
         var roomRouter = require('./routers/room.js');
