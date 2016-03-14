@@ -52,6 +52,10 @@ router.post('/create-room', upload.single('roomLogo'), function (req, res) {
                             roomId: roomId,
                             chats:[]
                         });
+                        global.dbInstance.collection('posts').insertOne({
+                            roomId: roomId,
+                            posts:[]
+                        });
                         res.send({
                             code: configMap.statusCode.ok,
                             msg: {
