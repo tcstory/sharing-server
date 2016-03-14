@@ -84,7 +84,41 @@ router.post('/create-post', bodyParser.json(), function (req, res) {
             });
         }
     });
-
+});
+router.post('/replay-post', bodyParser.json(), function (req, res) {
+    global.dbInstance.collection('posts').find({
+        roomId: req.session.curRoom
+    }, {
+        _id: false,
+        roomId: false
+    }).next(function (err, doc) {
+        if (!err) {
+            if (doc) {
+                var posts = doc.posts;
+                var index = -1;
+                for (var i = 0; i < posts.length; i++) {
+                    if (posts[i].postId == req.body.postId) {
+                        index = i;
+                        break;
+                    }
+                }
+                var obj = {};
+                obj['posts.' + i + '.replay'] = {
+                    userId: req.session.userId,
+                    content: req.body.content,
+                    replayTime: Date.now()
+                };
+                global.dbInstance.collection('posts').updateOne({
+                    roomId: req.session.curRoom
+                },{
+                    $push: obj
+                });
+                res.send({
+                    code: configMap.statusCode.ok
+                });
+            }
+        }
+    })
 });
 
 
