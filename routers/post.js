@@ -71,6 +71,7 @@ router.get('/get-post-details', function (req, res) {
                                 }).next(function (err, doc) {
                                     if (!err) {
                                         posts[i].authorAvatar = doc.userAvatar;
+                                        posts[i].authorName = doc.userName;
                                         res.send({
                                             code: configMap.statusCode.ok,
                                             post: posts[i]
@@ -86,6 +87,7 @@ router.get('/get-post-details', function (req, res) {
                             }).next(function (err, doc) {
                                 if (!err) {
                                     posts[i].authorAvatar = doc.userAvatar;
+                                    posts[i].authorName = doc.userName;
                                     res.send({
                                         code: configMap.statusCode.ok,
                                         post: posts[i]
