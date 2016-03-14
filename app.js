@@ -21,7 +21,8 @@ MongoClient.connect(configMap.mongoDBUrl, function(err, dbInstance) {
         global.dbInstance = dbInstance;
         var onlinePeopleCollection = dbInstance.collection('onlinePeople');
         var chatHistoryCollection = dbInstance.collection('chatHistory');
-
+        global.dbInstance.collection('onlinePeople').deleteMany({});
+        global.dbInstance.collection('sessions').deleteMany({});
         var session = require('express-session');
         var MongoStore = require('connect-mongo')(session);
         var sessionInstance = session({
