@@ -28,20 +28,7 @@ router.get('/get-post-list', function (req, res) {
                 if (!err) {
                     item.authorAvatar = doc.userAvatar;
                     item.authorName = doc.userName;
-                    async.each(item.replay, function (item, callback) {
-                        global.dbInstance.collection('user').find({
-                            userId: item.userId
-                        }).next(function (err, doc) {
-                            if (!err) {
-                                item.userAvatar = doc.userAvatar;
-                                item.userName = doc.userName;
-                                callback()
-                            }
-                        })
-
-                    }, function () {
-                        callback();
-                    });
+                    callback();
                 }
             });
         }, function (err) {
@@ -56,6 +43,64 @@ router.get('/get-post-list', function (req, res) {
     });
 });
 
+router.get('/get-post-details', function (req, res) {
+    var postId = req.query.postId;
+    global.dbInstance.collection('posts').find({
+        roomId: req.session.curRoom
+    }).next(function (err, doc) {
+        if (!err) {
+            var posts = doc.posts;
+            for (var i = 0; i < posts.length; i++) {
+                if (posts[i].postId == postId) {
+                    if (posts[i].replay.length !== 0) {
+                        (function (i) {
+                            async.each(posts[i].replay, function (item, callback) {
+                                global.dbInstance.collection('user').find({
+                                    userId: item.userId
+                                }).next(function (err, doc) {
+                                    if (!err) {
+                                        item.userAvatar = doc.userAvatar;
+                                        item.userName = doc.userName;
+                                        callback()
+                                    }
+                                })
+
+                            }, function () {
+                                global.dbInstance.collection('user').find({
+                                    userId: posts[i].authorId
+                                }).next(function (err, doc) {
+                                    if (!err) {
+                                        posts[i].authorAvatar = doc.userAvatar;
+                                        res.send({
+                                            code: configMap.statusCode.ok,
+                                            post: posts[i]
+                                        })
+                                    }
+                                });
+                            });
+                        })(i);
+                    } else {
+                        (function (i) {
+                            global.dbInstance.collection('user').find({
+                                userId: posts[i].authorId
+                            }).next(function (err, doc) {
+                                if (!err) {
+                                    posts[i].authorAvatar = doc.userAvatar;
+                                    res.send({
+                                        code: configMap.statusCode.ok,
+                                        post: posts[i]
+                                    })
+                                }
+                            });
+                        })(i)
+                    }
+                    break;
+                }
+            }
+        }
+    })
+});
+
 router.post('/create-post', bodyParser.json(), function (req, res) {
     global.dbInstance.collection('posts').find({roomId: req.session.curRoom}).next(function (err, doc) {
         if (!err) {
@@ -67,8 +112,9 @@ router.post('/create-post', bodyParser.json(), function (req, res) {
                         postTitle: req.body['title'],
                         content: req.body['content'],
                         authorId: req.session.userId,
-                        postId: configMap.postStartNumber + doc.posts.length,
-                        postTime: Date.now()
+                        postId: configMap.postStartNumber + doc.posts.length + '',
+                        postTime: Date.now(),
+                        replay: []
                     }
                 }
             }, function (err, result) {
@@ -110,7 +156,7 @@ router.post('/replay-post', bodyParser.json(), function (req, res) {
                 };
                 global.dbInstance.collection('posts').updateOne({
                     roomId: req.session.curRoom
-                },{
+                }, {
                     $push: obj
                 });
                 res.send({
