@@ -170,5 +170,29 @@ router.post('/replay-post', bodyParser.json(), function (req, res) {
 });
 
 
+
+var fs = require('fs');
+var path = require('path');
+var multer = require('multer');
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'site/dist/assets/post/')
+    },
+    filename: function (req, file, cb) {
+
+        req.body.postImageName = Date.now() + '.' + file.mimetype.split('/')[1];
+        cb(null, req.body.postImageName);
+    }
+});
+var upload = multer({
+    storage: storage
+});
+router.post('/upload-post-image', upload.single('postImage'), function (req,res) {
+    res.send({
+        code: configMap.statusCode.ok,
+        imageUrl: path.join('assets/post/',req.body.postImageName)
+    })
+});
+
 module.exports = router;
 
